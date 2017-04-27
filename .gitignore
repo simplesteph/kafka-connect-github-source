@@ -1,0 +1,4 @@
+standalone.offsets
+target/
+.idea/
+*.log
