@@ -1,7 +1,6 @@
 
 package com.simplesteph.kafka.model;
 
-import org.apache.kafka.connect.data.Struct;
 import org.json.JSONObject;
 
 import java.time.Instant;
@@ -396,8 +395,6 @@ public class Issue {
 
     public static Issue fromJson(JSONObject jsonObject) {
 
-        User user = User.fromJson(jsonObject.getJSONObject("user"));
-
         Issue issue = new Issue();
         issue.withUrl(jsonObject.getString(URL_FIELD));
         issue.withHtmlUrl(jsonObject.getString(HTML_URL_FIELD));
@@ -406,7 +403,18 @@ public class Issue {
         issue.withUpdatedAt(Instant.parse(jsonObject.getString(UPDATED_AT_FIELD)));
         issue.withNumber(jsonObject.getInt(NUMBER_FIELD));
         issue.withState(jsonObject.getString(STATE_FIELD));
+
+        // user is mandatory
+        User user = User.fromJson(jsonObject.getJSONObject("user"));
         issue.withUser(user);
+
+        // pull request is an optional fields
+        if (jsonObject.has("pull_request")){
+            System.out.println("pull!");
+            PullRequest pullRequest = PullRequest.fromJson(jsonObject.getJSONObject("pull_request"));
+            issue.withPullRequest(pullRequest);
+        }
+
         return issue;
     }
 }

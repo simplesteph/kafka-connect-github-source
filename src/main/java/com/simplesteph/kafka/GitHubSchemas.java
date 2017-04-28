@@ -26,10 +26,16 @@ public class GitHubSchemas {
     public static String USER_ID_FIELD = "id";
     public static String USER_LOGIN_FIELD = "login";
 
+    // PR fields
+    public static String PR_FIELD = "pull_request";
+    public static String PR_URL_FIELD = "url";
+    public static String PR_HTML_URL_FIELD = "html_url";
+
     // Schema names
     public static String SCHEMA_KEY = "GitHub Issue Key";
-    public static String SCHEMA_VALUE_ISSUE = "GitHub Issue";
+    public static String SCHEMA_VALUE_ISSUE = "Issue";
     public static String SCHEMA_VALUE_USER = "User";
+    public static String SCHEMA_VALUE_PR = "PR";
 
     // Key Schema
     public static Schema KEY_SCHEMA = SchemaBuilder.struct().name(SCHEMA_KEY)
@@ -47,6 +53,14 @@ public class GitHubSchemas {
             .field(USER_LOGIN_FIELD, Schema.STRING_SCHEMA)
             .build();
 
+    // optional schema
+    public static Schema PR_SCHEMA = SchemaBuilder.struct().name(SCHEMA_VALUE_PR)
+            .version(1)
+            .field(PR_URL_FIELD, Schema.STRING_SCHEMA)
+            .field(PR_HTML_URL_FIELD, Schema.STRING_SCHEMA)
+            .optional()
+            .build();
+
     public static Schema VALUE_SCHEMA = SchemaBuilder.struct().name(SCHEMA_VALUE_ISSUE)
             .version(1)
             .field(URL_FIELD, Schema.STRING_SCHEMA)
@@ -55,6 +69,7 @@ public class GitHubSchemas {
             .field(UPDATED_AT_FIELD, Schema.INT64_SCHEMA)
             .field(NUMBER_FIELD, Schema.INT32_SCHEMA)
             .field(STATE_FIELD, Schema.STRING_SCHEMA)
-            .field(USER_FIELD, USER_SCHEMA)
+            .field(USER_FIELD, USER_SCHEMA) // mandatory
+            .field(PR_FIELD, PR_SCHEMA)     // optional
             .build();
 }

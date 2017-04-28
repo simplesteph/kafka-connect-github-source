@@ -1,8 +1,11 @@
 
 package com.simplesteph.kafka.model;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
+import static com.simplesteph.kafka.GitHubSchemas.*;
 
 public class PullRequest {
 
@@ -99,4 +102,10 @@ public class PullRequest {
         return this;
     }
 
+    public static PullRequest fromJson(JSONObject pull_request) {
+        return new PullRequest()
+                .withUrl(pull_request.getString(PR_URL_FIELD))
+                .withHtmlUrl(pull_request.getString(PR_HTML_URL_FIELD));
+
+    }
 }
