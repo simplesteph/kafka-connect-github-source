@@ -2,12 +2,11 @@
 export CLASSPATH="$(find target/ -type f -name '*.jar'| grep '\-package' | tr '\n' ':')"
 if hash docker 2>/dev/null; then
     # for docker lovers
+    docker build . -t simplesteph/kafka-connect-source-github:1.0
     docker run -e CLASSPATH=$CLASSPATH \
-           --net=host --rm \
-           -v $(pwd):/kafka-connect-github-source \
-           -w /kafka-connect-github-source \
-           confluentinc/cp-kafka-connect:3.2.0 \
-           connect-standalone config/worker.properties config/GitHubSourceConnectorExample.properties
+           --net=host --rm -t \
+           -v $(pwd)/offsets:/kafka-connect-source-github/offsets \
+           simplesteph/kafka-connect-source-github:1.0
 elif hash connect-standalone 2>/dev/null; then
     # for mac users who used homebrew
     connect-standalone config/worker.properties config/GitHubSourceConnectorExample.properties
