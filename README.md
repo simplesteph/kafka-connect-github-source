@@ -30,13 +30,14 @@ auth.password=your_password
 # Running in development
 
 Note: Java 8 is required for this connector. 
+Make sure `config/worker.properties` is configured to wherever your kafka cluster is
 
 ```
 ./build.sh
 ./run.sh 
 ```
 
-I plan on creating a Dockerfile to simplify running this connector in standalone mode.
+The simplest way to run `run.sh` is to have docker installed. It will pull a Dockerfile and run the connector in standalone mode above it. 
 
 # Deploying
 
