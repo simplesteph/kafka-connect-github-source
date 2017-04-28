@@ -35,9 +35,10 @@ public class GitHubSourceTaskTest {
         gitHubSourceTask.config = new GitHubSourceConnectorConfig(initialConfig());
         gitHubSourceTask.nextPageToVisit = 1;
         gitHubSourceTask.nextQuerySince = Instant.parse("2017-01-01T00:00:00Z");
-        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl();
+        gitHubSourceTask.gitHubHttpAPIClient = new GitHubAPIHttpClient(gitHubSourceTask.config);
+        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
         System.out.println(url);
-        HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI();
+        HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
         if (httpResponse.getStatus() != 403) {
             assert (httpResponse.getStatus() == 200);
             Set<String> headers = httpResponse.getHeaders().keySet();
