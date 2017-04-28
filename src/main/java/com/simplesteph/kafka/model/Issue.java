@@ -410,7 +410,6 @@ public class Issue {
 
         // pull request is an optional fields
         if (jsonObject.has("pull_request")){
-            System.out.println("pull!");
             PullRequest pullRequest = PullRequest.fromJson(jsonObject.getJSONObject("pull_request"));
             issue.withPullRequest(pullRequest);
         }

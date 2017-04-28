@@ -197,8 +197,9 @@ public class GitHubSourceTask extends SourceTask {
     }
 
     private Map<String, String> sourcePartition() {
-        Map<String, String> map = Collections.singletonMap(FULL_REPO_FIELD,
-                config.getOwnerConfig() + "/" + config.getRepoConfig());
+        Map<String, String> map = new HashMap<>();
+        map.put(OWNER_FIELD, config.getOwnerConfig());
+        map.put(REPOSITORY_FIELD, config.getRepoConfig());
         return map;
     }
 
