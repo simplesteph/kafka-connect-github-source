@@ -30,11 +30,12 @@ public class GitHubSourceTask extends SourceTask {
     static final Logger log = LoggerFactory.getLogger(GitHubSourceTask.class);
     public GitHubSourceConnectorConfig config;
 
-
     protected Instant nextQuerySince;
     protected Integer lastIssueNumber;
     protected Integer nextPageToVisit = 1;
     protected Instant lastUpdatedAt;
+
+    GitHubHttpAPIClient gitHubHttpAPIClient = new GitHubHttpAPIClient();
 
     // for efficient http requests
     private Integer XRateLimit = 9999;
@@ -93,7 +94,7 @@ public class GitHubSourceTask extends SourceTask {
 
         // fetch data
         final ArrayList<SourceRecord> records = new ArrayList<>();
-        JSONArray issues = getNextIssues();
+        JSONArray issues = gitHubHttpAPIClient.getNextIssues();
         // we'll count how many results we get with i
         int i = 0;
         for (Object obj : issues) {
@@ -127,68 +128,6 @@ public class GitHubSourceTask extends SourceTask {
                 VALUE_SCHEMA,
                 buildRecordValue(issue),
                 issue.getUpdatedAt().toEpochMilli());
-    }
-
-    protected JSONArray getNextIssues() throws InterruptedException {
-
-        HttpResponse<JsonNode> jsonResponse;
-        try {
-            jsonResponse = getNextIssuesAPI();
-
-            // deal with headers in any case
-            Headers headers = jsonResponse.getHeaders();
-            XRateLimit = Integer.valueOf(headers.getFirst("X-RateLimit-Limit"));
-            XRateRemaining = Integer.valueOf(headers.getFirst("X-RateLimit-Remaining"));
-            XRateReset = Integer.valueOf(headers.getFirst("X-RateLimit-Reset"));
-            switch (jsonResponse.getStatus()){
-                case 200:
-                    return jsonResponse.getBody().getArray();
-                case 401:
-                    throw new ConnectException("Bad GitHub credentials provided, please edit your config");
-                case 403:
-                    // we have issues too many requests.
-                    log.info(jsonResponse.getBody().getObject().getString("message"));
-                    log.info(String.format("Your rate limit is %s", XRateLimit));
-                    log.info(String.format("Your remaining calls is %s", XRateRemaining));
-                    log.info(String.format("The limit will reset at %s",
-                            LocalDateTime.ofInstant(Instant.ofEpochSecond(XRateReset), ZoneOffset.systemDefault())));
-                    long sleepTime = XRateReset - Instant.now().getEpochSecond();
-                    log.info(String.format("Sleeping for %s seconds", sleepTime ));
-                    Thread.sleep(1000 * sleepTime);
-                    return getNextIssues();
-                default:
-                    log.error(String.valueOf(jsonResponse.getStatus()));
-                    log.error(jsonResponse.getBody().toString());
-                    log.error(jsonResponse.getHeaders().toString());
-                    log.error("Unknown error: Sleeping 5 seconds " +
-                            "before re-trying");
-                    Thread.sleep(5000L);
-                    return getNextIssues();
-            }
-        } catch (UnirestException e) {
-            e.printStackTrace();
-            Thread.sleep(5000L);
-            return new JSONArray();
-        }
-    }
-
-    protected HttpResponse<JsonNode> getNextIssuesAPI() throws UnirestException {
-        GetRequest unirest = Unirest.get(constructUrl());
-        if (!config.getAuthUsername().isEmpty() && !config.getAuthPassword().isEmpty() ){
-            unirest = unirest.basicAuth(config.getAuthUsername(), config.getAuthPassword());
-        }
-        log.debug(String.format("GET %s", unirest.getUrl()));
-        return unirest.asJson();
-    }
-
-    protected String constructUrl(){
-        return String.format(
-                "https://api.github.com/repos/%s/%s/issues?page=%s&per_page=%s&since=%s&state=all&direction=asc&sort=updated",
-                config.getOwnerConfig(),
-                config.getRepoConfig(),
-                nextPageToVisit,
-                config.getBatchSize(),
-                nextQuerySince.toString());
     }
 
     @Override
@@ -249,6 +188,72 @@ public class GitHubSourceTask extends SourceTask {
         }
 
         return valueStruct;
+    }
+
+    // GitHubHttpAPIClient used to launch HTTP Get requests
+    public class GitHubHttpAPIClient {
+
+        protected JSONArray getNextIssues() throws InterruptedException {
+
+            HttpResponse<JsonNode> jsonResponse;
+            try {
+                jsonResponse = getNextIssuesAPI();
+
+                // deal with headers in any case
+                Headers headers = jsonResponse.getHeaders();
+                XRateLimit = Integer.valueOf(headers.getFirst("X-RateLimit-Limit"));
+                XRateRemaining = Integer.valueOf(headers.getFirst("X-RateLimit-Remaining"));
+                XRateReset = Integer.valueOf(headers.getFirst("X-RateLimit-Reset"));
+                switch (jsonResponse.getStatus()){
+                    case 200:
+                        return jsonResponse.getBody().getArray();
+                    case 401:
+                        throw new ConnectException("Bad GitHub credentials provided, please edit your config");
+                    case 403:
+                        // we have issues too many requests.
+                        log.info(jsonResponse.getBody().getObject().getString("message"));
+                        log.info(String.format("Your rate limit is %s", XRateLimit));
+                        log.info(String.format("Your remaining calls is %s", XRateRemaining));
+                        log.info(String.format("The limit will reset at %s",
+                                LocalDateTime.ofInstant(Instant.ofEpochSecond(XRateReset), ZoneOffset.systemDefault())));
+                        long sleepTime = XRateReset - Instant.now().getEpochSecond();
+                        log.info(String.format("Sleeping for %s seconds", sleepTime ));
+                        Thread.sleep(1000 * sleepTime);
+                        return getNextIssues();
+                    default:
+                        log.error(String.valueOf(jsonResponse.getStatus()));
+                        log.error(jsonResponse.getBody().toString());
+                        log.error(jsonResponse.getHeaders().toString());
+                        log.error("Unknown error: Sleeping 5 seconds " +
+                                "before re-trying");
+                        Thread.sleep(5000L);
+                        return getNextIssues();
+                }
+            } catch (UnirestException e) {
+                e.printStackTrace();
+                Thread.sleep(5000L);
+                return new JSONArray();
+            }
+        }
+
+        protected HttpResponse<JsonNode> getNextIssuesAPI() throws UnirestException {
+            GetRequest unirest = Unirest.get(constructUrl());
+            if (!config.getAuthUsername().isEmpty() && !config.getAuthPassword().isEmpty() ){
+                unirest = unirest.basicAuth(config.getAuthUsername(), config.getAuthPassword());
+            }
+            log.debug(String.format("GET %s", unirest.getUrl()));
+            return unirest.asJson();
+        }
+
+        protected String constructUrl(){
+            return String.format(
+                    "https://api.github.com/repos/%s/%s/issues?page=%s&per_page=%s&since=%s&state=all&direction=asc&sort=updated",
+                    config.getOwnerConfig(),
+                    config.getRepoConfig(),
+                    nextPageToVisit,
+                    config.getBatchSize(),
+                    nextQuerySince.toString());
+        }
     }
 
 }
