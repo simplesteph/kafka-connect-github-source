@@ -405,12 +405,12 @@ public class Issue {
         issue.withState(jsonObject.getString(STATE_FIELD));
 
         // user is mandatory
-        User user = User.fromJson(jsonObject.getJSONObject("user"));
+        User user = User.fromJson(jsonObject.getJSONObject(USER_FIELD));
         issue.withUser(user);
 
         // pull request is an optional fields
-        if (jsonObject.has("pull_request")){
-            PullRequest pullRequest = PullRequest.fromJson(jsonObject.getJSONObject("pull_request"));
+        if (jsonObject.has(PR_FIELD)){
+            PullRequest pullRequest = PullRequest.fromJson(jsonObject.getJSONObject(PR_FIELD));
             issue.withPullRequest(pullRequest);
         }
 
