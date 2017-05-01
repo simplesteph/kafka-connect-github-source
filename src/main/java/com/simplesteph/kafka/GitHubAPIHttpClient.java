@@ -59,6 +59,7 @@ public class GitHubAPIHttpClient {
                     Thread.sleep(1000 * sleepTime);
                     return getNextIssues(page, since);
                 default:
+                    log.error(constructUrl(page, since));
                     log.error(String.valueOf(jsonResponse.getStatus()));
                     log.error(jsonResponse.getBody().toString());
                     log.error(jsonResponse.getHeaders().toString());

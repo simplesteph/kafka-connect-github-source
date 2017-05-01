@@ -8,7 +8,6 @@ public class GitHubSchemas {
     public static String NEXT_PAGE_FIELD = "next_page";
 
     // Issue fields
-    public static String FULL_REPO_FIELD = "owner/repository";
     public static String OWNER_FIELD = "owner";
     public static String REPOSITORY_FIELD = "repository";
     public static String CREATED_AT_FIELD = "created_at";
@@ -32,10 +31,10 @@ public class GitHubSchemas {
     public static String PR_HTML_URL_FIELD = "html_url";
 
     // Schema names
-    public static String SCHEMA_KEY = "GitHub Issue Key";
-    public static String SCHEMA_VALUE_ISSUE = "Issue";
-    public static String SCHEMA_VALUE_USER = "User";
-    public static String SCHEMA_VALUE_PR = "PR";
+    public static String SCHEMA_KEY = "issue_key";
+    public static String SCHEMA_VALUE_ISSUE = "issue";
+    public static String SCHEMA_VALUE_USER = "user";
+    public static String SCHEMA_VALUE_PR = "pr";
 
     // Key Schema
     public static Schema KEY_SCHEMA = SchemaBuilder.struct().name(SCHEMA_KEY)
