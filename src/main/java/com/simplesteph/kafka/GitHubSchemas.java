@@ -2,6 +2,7 @@ package com.simplesteph.kafka;
 
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.connect.data.Timestamp;
 
 public class GitHubSchemas {
 
@@ -61,11 +62,11 @@ public class GitHubSchemas {
             .build();
 
     public static Schema VALUE_SCHEMA = SchemaBuilder.struct().name(SCHEMA_VALUE_ISSUE)
-            .version(1)
+            .version(2)
             .field(URL_FIELD, Schema.STRING_SCHEMA)
             .field(TITLE_FIELD, Schema.STRING_SCHEMA)
-            .field(CREATED_AT_FIELD, Schema.INT64_SCHEMA)
-            .field(UPDATED_AT_FIELD, Schema.INT64_SCHEMA)
+            .field(CREATED_AT_FIELD, Timestamp.SCHEMA)
+            .field(UPDATED_AT_FIELD, Timestamp.SCHEMA)
             .field(NUMBER_FIELD, Schema.INT32_SCHEMA)
             .field(STATE_FIELD, Schema.STRING_SCHEMA)
             .field(USER_FIELD, USER_SCHEMA) // mandatory
