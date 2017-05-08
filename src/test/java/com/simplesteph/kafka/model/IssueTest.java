@@ -1,7 +1,11 @@
 package com.simplesteph.kafka.model;
 
+import com.simplesteph.kafka.GitHubSourceTask;
+import org.apache.kafka.connect.data.Struct;
 import org.json.JSONObject;
 import org.junit.Test;
+
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -82,6 +86,14 @@ public class IssueTest {
         assertEquals(pullRequest.getUrl(), "https://api.github.com/repos/apache/kafka/pulls/2800");
         assertEquals(pullRequest.getHtmlUrl(), "https://github.com/apache/kafka/pull/2800");
 
+    }
+
+    @Test
+    public void convertsToStruct(){
+        // issue
+        Issue issue = Issue.fromJson(issueJson);
+        Struct struct = new GitHubSourceTask().buildRecordValue(issue);
+        assert struct.get("created_at").getClass() == Date.class;
     }
 
 }

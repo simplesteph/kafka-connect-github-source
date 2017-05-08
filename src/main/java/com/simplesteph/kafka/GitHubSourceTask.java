@@ -137,14 +137,14 @@ public class GitHubSourceTask extends SourceTask {
         return key;
     }
 
-    private Struct buildRecordValue(Issue issue){
+    public Struct buildRecordValue(Issue issue){
 
         // Issue top level fields
         Struct valueStruct = new Struct(VALUE_SCHEMA)
                 .put(URL_FIELD, issue.getUrl())
                 .put(TITLE_FIELD, issue.getTitle())
-                .put(CREATED_AT_FIELD, issue.getCreatedAt().toEpochMilli())
-                .put(UPDATED_AT_FIELD, issue.getUpdatedAt().toEpochMilli())
+                .put(CREATED_AT_FIELD, Date.from(issue.getCreatedAt()))
+                .put(UPDATED_AT_FIELD, Date.from(issue.getUpdatedAt()))
                 .put(NUMBER_FIELD, issue.getNumber())
                 .put(STATE_FIELD, issue.getState());
 
