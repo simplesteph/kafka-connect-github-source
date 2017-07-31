@@ -1,3 +1,8 @@
+# Learning
+
+This project is a companion repository to the [Apache Kafka Connect course on Udemy](https://www.udemy.com/apache-kafka-series-kafka-connect-hands-on-learning/?couponCode=GITHUB10). You can find the course here:
+https://www.udemy.com/apache-kafka-series-kafka-connect-hands-on-learning/?couponCode=GITHUB10
+
 # Kafka Connect Source GitHub
 
 This connector allows you to get a stream of issues and pull requests from your GitHub repository, using the GitHub Api: https://developer.github.com/v3/issues/#list-issues-for-a-repository
