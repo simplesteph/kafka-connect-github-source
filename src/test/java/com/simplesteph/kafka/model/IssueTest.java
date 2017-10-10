@@ -1,5 +1,6 @@
 package com.simplesteph.kafka.model;
 
+import com.simplesteph.kafka.GitHubSchemas;
 import com.simplesteph.kafka.GitHubSourceTask;
 import org.apache.kafka.connect.data.Struct;
 import org.json.JSONObject;
@@ -93,7 +94,7 @@ public class IssueTest {
         // issue
         Issue issue = Issue.fromJson(issueJson);
         Struct struct = new GitHubSourceTask().buildRecordValue(issue);
-        assert struct.get("created_at").getClass() == Date.class;
+        assert struct.get(GitHubSchemas.CREATED_AT_FIELD).getClass() == Date.class;
     }
 
 }
