@@ -1,7 +1,6 @@
 
 package com.simplesteph.kafka.model;
 
-import org.apache.kafka.connect.data.Struct;
 import org.json.JSONObject;
 
 import java.util.HashMap;

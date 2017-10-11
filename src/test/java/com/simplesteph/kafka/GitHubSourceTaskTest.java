@@ -13,10 +13,11 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.simplesteph.kafka.GitHubSourceConnectorConfig.*;
+import static org.junit.Assert.*;
 
 public class GitHubSourceTaskTest {
 
-    GitHubSourceTask gitHubSourceTask = new GitHubSourceTask();
+    private GitHubSourceTask gitHubSourceTask = new GitHubSourceTask();
     private Integer batchSize = 10;
 
     private Map<String, String> initialConfig() {
@@ -40,17 +41,18 @@ public class GitHubSourceTaskTest {
         System.out.println(url);
         HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
         if (httpResponse.getStatus() != 403) {
-            assert (httpResponse.getStatus() == 200);
+            assertEquals(200, httpResponse.getStatus());
             Set<String> headers = httpResponse.getHeaders().keySet();
-            assert (headers.contains("ETag"));
-            assert (headers.contains("X-RateLimit-Limit"));
-            assert (headers.contains("X-RateLimit-Remaining"));
-            assert (headers.contains("X-RateLimit-Reset"));
-            assert (httpResponse.getBody().getArray().length() == 10);
+            assertTrue(headers.contains("ETag"));
+            assertTrue(headers.contains("X-RateLimit-Limit"));
+            assertTrue(headers.contains("X-RateLimit-Remaining"));
+            assertTrue(headers.contains("X-RateLimit-Reset"));
+            assertEquals(batchSize.intValue(), httpResponse.getBody().getArray().length());
             JSONObject jsonObject = (JSONObject) httpResponse.getBody().getArray().get(0);
             Issue issue = Issue.fromJson(jsonObject);
-            assert (issue != null);
-            assert (issue.getNumber() == 2072);
+            assertNotNull(issue);
+            assertNotNull(issue.getNumber());
+            assertEquals(2072, issue.getNumber().intValue());
         }
     }
 }
