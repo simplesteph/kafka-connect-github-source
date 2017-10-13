@@ -94,7 +94,7 @@ public class IssueTest {
         // issue
         Issue issue = Issue.fromJson(issueJson);
         Struct struct = new GitHubSourceTask().buildRecordValue(issue);
-        assert struct.get(GitHubSchemas.CREATED_AT_FIELD).getClass() == Date.class;
+        assertEquals(struct.get(GitHubSchemas.CREATED_AT_FIELD).getClass(), Date.class);
     }
 
 }

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.simplesteph.kafka.GitHubSourceConnectorConfig.*;
+import static org.junit.Assert.*;
 
 public class GitHubSourceConnectorConfigTest {
 
@@ -31,7 +32,7 @@ public class GitHubSourceConnectorConfigTest {
 
     @Test
     public void initialConfigIsValid() {
-        assert (configDef.validate(config)
+        assertTrue(configDef.validate(config)
                 .stream()
                 .allMatch(configValue -> configValue.errorMessages().size() == 0));
     }
@@ -47,32 +48,32 @@ public class GitHubSourceConnectorConfigTest {
     public void validateSince() {
         config.put(SINCE_CONFIG, "not-a-date");
         ConfigValue configValue = configDef.validateAll(config).get(SINCE_CONFIG);
-        assert (configValue.errorMessages().size() > 0);
+        assertTrue(configValue.errorMessages().size() > 0);
     }
 
     @Test
     public void validateBatchSize() {
         config.put(BATCH_SIZE_CONFIG, "-1");
         ConfigValue configValue = configDef.validateAll(config).get(BATCH_SIZE_CONFIG);
-        assert (configValue.errorMessages().size() > 0);
+        assertTrue(configValue.errorMessages().size() > 0);
 
         config.put(BATCH_SIZE_CONFIG, "101");
         configValue = configDef.validateAll(config).get(BATCH_SIZE_CONFIG);
-        assert (configValue.errorMessages().size() > 0);
+        assertTrue(configValue.errorMessages().size() > 0);
     }
 
     @Test
     public void validateUsername() {
         config.put(AUTH_USERNAME_CONFIG, "username");
         ConfigValue configValue = configDef.validateAll(config).get(AUTH_USERNAME_CONFIG);
-        assert (configValue.errorMessages().size() == 0);
+        assertEquals(configValue.errorMessages().size(), 0);
     }
 
     @Test
     public void validatePassword() {
         config.put(AUTH_PASSWORD_CONFIG, "password");
         ConfigValue configValue = configDef.validateAll(config).get(AUTH_PASSWORD_CONFIG);
-        assert (configValue.errorMessages().size() == 0);
+        assertEquals(configValue.errorMessages().size(), 0);
     }
 
 }
