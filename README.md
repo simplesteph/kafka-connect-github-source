@@ -1,8 +1,8 @@
 # Learning
 
-This project is a companion repository to the [Apache Kafka Connect course on Udemy](https://www.udemy.com/apache-kafka-series-kafka-connect-hands-on-learning/?couponCode=GITHUB10). 
+This project is a companion repository to the [Apache Kafka Connect course on Udemy](https://www.udemy.com/kafka-connect/?couponCode=GITHUB10). 
 
-https://www.udemy.com/apache-kafka-series-kafka-connect-hands-on-learning/?couponCode=GITHUB10
+https://www.udemy.com/kafka-connect/?couponCode=GITHUB10
 
 # Kafka Connect Source GitHub
 
