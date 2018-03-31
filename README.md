@@ -24,9 +24,7 @@ This connector is not perfect and can be improved, please feel free to submit an
 name=GitHubSourceConnectorDemo
 tasks.max=1
 connector.class=com.simplesteph.kafka.GitHubSourceConnector
-topic=github-issues
-github.owner=kubernetes
-github.repo=kubernetes
+github.repositories=scala/scala:lang-topic,apache/kafka:kafka-topic,apache/cassandra:cassandra-topic
 since.timestamp=2017-01-01T00:00:00Z
 # I heavily recommend you set those two fields:
 auth.username=your_username
@@ -49,4 +47,5 @@ The simplest way to run `run.sh` is to have docker installed. It will pull a Doc
 
 Note: Java 8 is required for this connector. 
 
-TODO
+# Note
+If you are running standalone connector outside Docker, you can reset the worker data with `rm -rf /tmp/connect.offsets`

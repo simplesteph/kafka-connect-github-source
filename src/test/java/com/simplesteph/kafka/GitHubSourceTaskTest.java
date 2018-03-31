@@ -22,11 +22,9 @@ public class GitHubSourceTaskTest {
 
     private Map<String, String> initialConfig() {
         Map<String, String> baseProps = new HashMap<>();
-        baseProps.put(OWNER_CONFIG, "apache");
-        baseProps.put(REPO_CONFIG, "kafka");
+        baseProps.put(REPOSITORIES_CONFIG, "apache/kafka:kafkatopic,scala/scala:scalatopic");
         baseProps.put(SINCE_CONFIG, "2017-04-26T01:23:44Z");
         baseProps.put(BATCH_SIZE_CONFIG, batchSize.toString());
-        baseProps.put(TOPIC_CONFIG, "github-issues");
         return baseProps;
     }
 
@@ -37,9 +35,11 @@ public class GitHubSourceTaskTest {
         gitHubSourceTask.nextPageToVisit = 1;
         gitHubSourceTask.nextQuerySince = Instant.parse("2017-01-01T00:00:00Z");
         gitHubSourceTask.gitHubHttpAPIClient = new GitHubAPIHttpClient(gitHubSourceTask.config);
-        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
+        GithubSourceTaskConfig repository = gitHubSourceTask.config.getTasksConfig().get(0);
+
+        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl(repository.getOwner(), repository.getRepository(), gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
         System.out.println(url);
-        HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
+        HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(repository.getOwner(), repository.getRepository(), gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
         if (httpResponse.getStatus() != 403) {
             assertEquals(200, httpResponse.getStatus());
             Set<String> headers = httpResponse.getHeaders().keySet();

@@ -31,11 +31,11 @@ public class GitHubAPIHttpClient {
         this.config = config;
     }
 
-    protected JSONArray getNextIssues(Integer page, Instant since) throws InterruptedException {
+    protected JSONArray getNextIssues(String owner, String repositoryName, Integer page, Instant since) throws InterruptedException {
 
         HttpResponse<JsonNode> jsonResponse;
         try {
-            jsonResponse = getNextIssuesAPI(page, since);
+            jsonResponse = getNextIssuesAPI(owner, repositoryName, page, since);
 
             // deal with headers in any case
             Headers headers = jsonResponse.getHeaders();
@@ -44,7 +44,13 @@ public class GitHubAPIHttpClient {
             XRateReset = Integer.valueOf(headers.getFirst("X-RateLimit-Reset"));
             switch (jsonResponse.getStatus()){
                 case 200:
-                    return jsonResponse.getBody().getArray();
+                    JSONArray response = jsonResponse.getBody().getArray();
+                    if (response.length() == 0) {
+                        Thread.sleep(60000);
+                        return getNextIssues(owner, repositoryName, page, since);
+                    } else {
+                        return jsonResponse.getBody().getArray();
+                    }
                 case 401:
                     throw new ConnectException("Bad GitHub credentials provided, please edit your config");
                 case 403:
@@ -57,16 +63,16 @@ public class GitHubAPIHttpClient {
                     long sleepTime = XRateReset - Instant.now().getEpochSecond();
                     log.info(String.format("Sleeping for %s seconds", sleepTime ));
                     Thread.sleep(1000 * sleepTime);
-                    return getNextIssues(page, since);
+                    return getNextIssues(owner, repositoryName, page, since);
                 default:
-                    log.error(constructUrl(page, since));
+                    log.error(constructUrl(owner, repositoryName, page, since));
                     log.error(String.valueOf(jsonResponse.getStatus()));
                     log.error(jsonResponse.getBody().toString());
                     log.error(jsonResponse.getHeaders().toString());
                     log.error("Unknown error: Sleeping 5 seconds " +
                             "before re-trying");
                     Thread.sleep(5000L);
-                    return getNextIssues(page, since);
+                    return getNextIssues(owner, repositoryName, page, since);
             }
         } catch (UnirestException e) {
             e.printStackTrace();
@@ -75,8 +81,10 @@ public class GitHubAPIHttpClient {
         }
     }
 
-    protected HttpResponse<JsonNode> getNextIssuesAPI(Integer page, Instant since) throws UnirestException {
-        GetRequest unirest = Unirest.get(constructUrl(page, since));
+    protected HttpResponse<JsonNode> getNextIssuesAPI(String owner, String repositoryName, Integer page, Instant since) throws UnirestException {
+        String url = constructUrl(owner, repositoryName, page, since);
+        log.debug("Calling " + url);
+        GetRequest unirest = Unirest.get(url);
         if (!config.getAuthUsername().isEmpty() && !config.getAuthPassword().isEmpty() ){
             unirest = unirest.basicAuth(config.getAuthUsername(), config.getAuthPassword());
         }
@@ -84,11 +92,11 @@ public class GitHubAPIHttpClient {
         return unirest.asJson();
     }
 
-    protected String constructUrl(Integer page, Instant since){
+    protected String constructUrl(String owner, String repositoryName, Integer page, Instant since){
         return String.format(
                 "https://api.github.com/repos/%s/%s/issues?page=%s&per_page=%s&since=%s&state=all&direction=asc&sort=updated",
-                config.getOwnerConfig(),
-                config.getRepoConfig(),
+                owner,
+                repositoryName,
                 page,
                 config.getBatchSize(),
                 since.toString());

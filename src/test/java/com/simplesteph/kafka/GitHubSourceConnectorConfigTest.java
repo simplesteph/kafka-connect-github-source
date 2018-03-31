@@ -5,6 +5,7 @@ import org.apache.kafka.common.config.ConfigValue;
 import org.junit.Before;
 import org.junit.Test;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.simplesteph.kafka.GitHubSourceConnectorConfig.*;
@@ -18,11 +19,9 @@ public class GitHubSourceConnectorConfigTest {
     @Before
     public void setUpInitialConfig() {
         config = new HashMap<>();
-        config.put(OWNER_CONFIG, "foo");
-        config.put(REPO_CONFIG, "bar");
+        config.put(REPOSITORIES_CONFIG, "foo/bar:baz,scala/notjava:scalatopic");
         config.put(SINCE_CONFIG, "2017-04-26T01:23:45Z");
         config.put(BATCH_SIZE_CONFIG, "100");
-        config.put(TOPIC_CONFIG, "github-issues");
     }
 
     @Test
@@ -74,6 +73,19 @@ public class GitHubSourceConnectorConfigTest {
         config.put(AUTH_PASSWORD_CONFIG, "password");
         ConfigValue configValue = configDef.validateAll(config).get(AUTH_PASSWORD_CONFIG);
         assertEquals(configValue.errorMessages().size(), 0);
+    }
+
+    @Test
+    public void validateRepositories() {
+        GitHubSourceConnectorConfig config = new GitHubSourceConnectorConfig(this.config);
+        List<GithubSourceTaskConfig> repositories = config.getTasksConfig();
+        assertEquals(repositories.get(0).getOwner(), "foo");
+        assertEquals(repositories.get(0).getRepository(), "bar");
+        assertEquals(repositories.get(0).getTopic(), "baz");
+        assertEquals(repositories.get(1).getOwner(), "scala");
+        assertEquals(repositories.get(1).getRepository(), "notjava");
+        assertEquals(repositories.get(1).getTopic(), "scalatopic");
+
     }
 
 }

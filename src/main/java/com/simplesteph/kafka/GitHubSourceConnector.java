@@ -30,10 +30,25 @@ public class GitHubSourceConnector extends SourceConnector {
     }
 
     @Override
-    public List<Map<String, String>> taskConfigs(int i) {
+    public List<Map<String, String>> taskConfigs(int n) {
+        List<GithubSourceTaskConfig> taskConfigs = config.getTasksConfig();
+
+        Integer maxRepositories = Math.min(n, taskConfigs.size());
+
+        if (maxRepositories < taskConfigs.size())
+            log.warn("Less workers than repositories, only first %d repositories will be extracted", maxRepositories);
+
         // Define the individual task configurations that will be executed.
-        ArrayList<Map<String, String>> configs = new ArrayList<>(1);
-        configs.add(config.originalsStrings());
+        ArrayList<Map<String, String>> configs = new ArrayList(taskConfigs.size());
+
+        for(int i = 0; i < maxRepositories; i++) {
+            Map<String, String> connectorConfig = config.originalsStrings();
+            connectorConfig.put(GithubSourceTaskConfig.TASKCONFIG_OWNER_PARAMETER, taskConfigs.get(i).getOwner());
+            connectorConfig.put(GithubSourceTaskConfig.TASKCONFIG_NAME_PARAMETER, taskConfigs.get(i).getRepository());
+            connectorConfig.put(GithubSourceTaskConfig.TASKCONFIG_TOPIC_PARAMETER, taskConfigs.get(i).getTopic());
+            configs.add(connectorConfig);
+        }
+
         return configs;
     }
 
