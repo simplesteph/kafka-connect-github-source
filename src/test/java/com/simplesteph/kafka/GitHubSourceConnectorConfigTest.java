@@ -18,11 +18,9 @@ public class GitHubSourceConnectorConfigTest {
     @Before
     public void setUpInitialConfig() {
         config = new HashMap<>();
-        config.put(OWNER_CONFIG, "foo");
-        config.put(REPO_CONFIG, "bar");
+        config.put(REPOS_CONFIG,"kubernetes/kubernetes:github-issues.31,foo-foo/bar_bar:github.issues");
         config.put(SINCE_CONFIG, "2017-04-26T01:23:45Z");
         config.put(BATCH_SIZE_CONFIG, "100");
-        config.put(TOPIC_CONFIG, "github-issues");
     }
 
     @Test
@@ -42,6 +40,17 @@ public class GitHubSourceConnectorConfigTest {
         GitHubSourceConnectorConfig config = new GitHubSourceConnectorConfig(this.config);
         config.getAuthPassword();
 
+    }
+
+    @Test
+    public void validateRepos() {
+        config.put(REPOS_CONFIG, "not-a-valid-pattern");
+        ConfigValue configValue = configDef.validateAll(config).get(REPOS_CONFIG);
+        assertTrue(configValue.errorMessages().size() > 0);
+
+        config.put(REPOS_CONFIG, "valid/pattern:followed");
+        configValue = configDef.validateAll(config).get(REPOS_CONFIG);
+        assertEquals(configValue.errorMessages().size() , 0);
     }
 
     @Test
