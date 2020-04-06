@@ -1,9 +1,3 @@
-# Learning
-
-This project is a companion repository to the [Apache Kafka Connect course on Udemy](https://links.datacumulus.com/kafka-connect-coupon). 
-
-https://links.datacumulus.com/kafka-connect-coupon
-
 # Kafka Connect Source GitHub
 
 This connector allows you to get a stream of issues and pull requests from GitHub repositories, using the GitHub Api: https://developer.github.com/v3/issues/#list-issues-for-a-repository
@@ -13,10 +7,6 @@ Issues are pulled based on `updated_at` field, meaning any update to an issue or
 The connector writes to topic that is great candidate to demonstrate *log compaction*. It's also a fun way to automate your GitHub workflow. 
 
 It's finally aimed to be an educative example to demonstrate how to write a Source Connector a little less trivial than the `FileStreamSourceConnector` provided in Kafka.
-
-# Contributing
-
-This connector is not perfect and can be improved, please feel free to submit any PR you deem useful. 
 
 # Configuration
 
@@ -56,6 +46,6 @@ Paste the folder `target/kafka-connnect-github-source-1.1-package /share/java/ka
 in connect-workers' `plugin.path`(can be found in the connect-workers' properties) 
 directory. The connect-worker should be able to detect `GitHubSourceConnector`.
 
+# Contributing
 
-
-
+This connector can be improved much, please feel free to submit any PR you deem useful.
