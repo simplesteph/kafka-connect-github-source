@@ -6,8 +6,6 @@ Issues are pulled based on `updated_at` field, meaning any update to an issue or
 
 The connector writes to topic that is great candidate to demonstrate *log compaction*. It's also a fun way to automate your GitHub workflow. 
 
-It's finally aimed to be an educative example to demonstrate how to write a Source Connector a little less trivial than the `FileStreamSourceConnector` provided in Kafka.
-
 # Configuration
 
 ```
@@ -21,6 +19,11 @@ auth.username=your_username
 auth.password=your_password
 ```
 Note: Configuration for github.repos should be set and should follow the pattern owner1/repo1:topic1,owner2/repo2:topic2 ....
+
+You can control the number of tasks to run by using *tasks.max*. This allows work to be divided from task i.e., each task will be assigned few repositories ans will 
+fetch issues for those repositories. 
+
+Set *since.timestamp* to fetch the issues of repositories which have been updated after the required timestamp.
 
 # Running in development
 
