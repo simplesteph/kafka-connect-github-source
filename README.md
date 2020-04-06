@@ -20,8 +20,8 @@ auth.password=your_password
 ```
 Note: Configuration for github.repos should be set and should follow the pattern owner1/repo1:topic1,owner2/repo2:topic2 ....
 
-You can control the number of tasks to run by using *tasks.max*. This allows work to be divided from task i.e., each task will be assigned few repositories ans will 
-fetch issues for those repositories. 
+You can control the number of tasks to run by using *tasks.max*. This allows work to be divided among tasks i.e., each task will be assigned few repositories and 
+will fetch issues for those repositories. 
 
 Set *since.timestamp* to fetch the issues of repositories which have been updated after the required timestamp.
 
