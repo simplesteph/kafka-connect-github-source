@@ -12,11 +12,9 @@ public class GitHubSourceConnectorTest {
 
   private Map<String, String> initialConfig() {
     Map<String, String> baseProps = new HashMap<>();
-    baseProps.put(OWNER_CONFIG, "foo");
-    baseProps.put(REPO_CONFIG, "bar");
+    baseProps.put(REPOS_CONFIG,"kubernetes/kubernetes:github-issues.31,foo-foo/bar_bar:github.issues,foo-bar/bar_foo:github.issues");
     baseProps.put(SINCE_CONFIG, "2017-04-26T01:23:45Z");
     baseProps.put(BATCH_SIZE_CONFIG, "100");
-    baseProps.put(TOPIC_CONFIG, "github-issues");
     return (baseProps);
   }
 
@@ -25,6 +23,9 @@ public class GitHubSourceConnectorTest {
       GitHubSourceConnector gitHubSourceConnector = new GitHubSourceConnector();
       gitHubSourceConnector.start(initialConfig());
       assertEquals(gitHubSourceConnector.taskConfigs(1).size(),1);
-      assertEquals(gitHubSourceConnector.taskConfigs(10).size(),1);
+      assertEquals(gitHubSourceConnector.taskConfigs(2).size(),2);
+      assertEquals(gitHubSourceConnector.taskConfigs(3).size(),3);
+      assertEquals(gitHubSourceConnector.taskConfigs(4).size(),3);
+      assertEquals(gitHubSourceConnector.taskConfigs(10).size(),3);
   }
 }

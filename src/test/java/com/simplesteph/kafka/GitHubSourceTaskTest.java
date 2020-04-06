@@ -1,12 +1,13 @@
 package com.simplesteph.kafka;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.simplesteph.kafka.model.Issue;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,33 +23,31 @@ public class GitHubSourceTaskTest {
 
     private Map<String, String> initialConfig() {
         Map<String, String> baseProps = new HashMap<>();
-        baseProps.put(OWNER_CONFIG, "apache");
-        baseProps.put(REPO_CONFIG, "kafka");
-        baseProps.put(SINCE_CONFIG, "2017-04-26T01:23:44Z");
+        baseProps.put(REPOS_CONFIG,"apache/kafka:github_issues,kubernetes/kubernetes:github-issues.31,foo-foo/bar_bar:github.issues");
+        baseProps.put(SINCE_CONFIG, "2017-01-01T00:00:00Z");
         baseProps.put(BATCH_SIZE_CONFIG, batchSize.toString());
-        baseProps.put(TOPIC_CONFIG, "github-issues");
         return baseProps;
     }
 
 
     @Test
-    public void test() throws UnirestException {
+    public void test() throws IOException {
         gitHubSourceTask.config = new GitHubSourceConnectorConfig(initialConfig());
-        gitHubSourceTask.nextPageToVisit = 1;
-        gitHubSourceTask.nextQuerySince = Instant.parse("2017-01-01T00:00:00Z");
+        RepositoryVariables repoVar=new RepositoryVariables(gitHubSourceTask.config.getReposConfig()[0]);
+        repoVar.nextQuerySince=Instant.parse("2017-01-01T00:00:00Z");
         gitHubSourceTask.gitHubHttpAPIClient = new GitHubAPIHttpClient(gitHubSourceTask.config);
-        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
+        String url = gitHubSourceTask.gitHubHttpAPIClient.constructUrl(repoVar);
         System.out.println(url);
-        HttpResponse<JsonNode> httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(gitHubSourceTask.nextPageToVisit, gitHubSourceTask.nextQuerySince);
-        if (httpResponse.getStatus() != 403) {
-            assertEquals(200, httpResponse.getStatus());
-            Set<String> headers = httpResponse.getHeaders().keySet();
-            assertTrue(headers.contains("ETag"));
-            assertTrue(headers.contains("X-RateLimit-Limit"));
-            assertTrue(headers.contains("X-RateLimit-Remaining"));
-            assertTrue(headers.contains("X-RateLimit-Reset"));
-            assertEquals(batchSize.intValue(), httpResponse.getBody().getArray().length());
-            JSONObject jsonObject = (JSONObject) httpResponse.getBody().getArray().get(0);
+        HttpResponse httpResponse = gitHubSourceTask.gitHubHttpAPIClient.getNextIssuesAPI(repoVar);
+        if (httpResponse.getStatusLine().getStatusCode() != 403) {
+            assertEquals(200, httpResponse.getStatusLine().getStatusCode());
+            assertTrue(httpResponse.getFirstHeader("ETag")!=null);
+            assertTrue(httpResponse.getFirstHeader("X-RateLimit-Limit")!=null);
+            assertTrue(httpResponse.getFirstHeader("X-RateLimit-Remaining")!=null);
+            assertTrue(httpResponse.getFirstHeader("X-RateLimit-Reset")!=null);
+            JSONArray jsonArray=new JSONArray(EntityUtils.toString(httpResponse.getEntity()));
+            assertTrue(batchSize.intValue() >= jsonArray.length());
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);
             Issue issue = Issue.fromJson(jsonObject);
             assertNotNull(issue);
             assertNotNull(issue.getNumber());

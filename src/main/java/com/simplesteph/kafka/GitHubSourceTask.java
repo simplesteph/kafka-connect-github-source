@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import static com.simplesteph.kafka.GitHubSchemas.*;
@@ -21,12 +22,11 @@ public class GitHubSourceTask extends SourceTask {
     private static final Logger log = LoggerFactory.getLogger(GitHubSourceTask.class);
     public GitHubSourceConnectorConfig config;
 
-    protected Instant nextQuerySince;
-    protected Integer lastIssueNumber;
-    protected Integer nextPageToVisit = 1;
-    protected Instant lastUpdatedAt;
-
+    ArrayList<RepositoryVariables> repositoryList;
     GitHubAPIHttpClient gitHubHttpAPIClient;
+
+    int RoundRobinNumber;
+    int NumOfReposToFollow;
 
     @Override
     public String version() {
@@ -42,25 +42,35 @@ public class GitHubSourceTask extends SourceTask {
     }
 
     private void initializeLastVariables(){
-        Map<String, Object> lastSourceOffset = null;
-        lastSourceOffset = context.offsetStorageReader().offset(sourcePartition());
-        if( lastSourceOffset == null){
-            // we haven't fetched anything yet, so we initialize to 7 days ago
-            nextQuerySince = config.getSince();
-            lastIssueNumber = -1;
-        } else {
-            Object updatedAt = lastSourceOffset.get(UPDATED_AT_FIELD);
-            Object issueNumber = lastSourceOffset.get(NUMBER_FIELD);
-            Object nextPage = lastSourceOffset.get(NEXT_PAGE_FIELD);
-            if(updatedAt != null && (updatedAt instanceof String)){
-                nextQuerySince = Instant.parse((String) updatedAt);
+        //Initializing last variables of all the Repositories given to the task
+        String repos[]=config.getReposConfig();
+        repositoryList=new ArrayList<RepositoryVariables>(repos.length);
+        RoundRobinNumber=0;
+        NumOfReposToFollow=repos.length;
+        for(String repo:repos) {
+            RepositoryVariables RepoVar=new RepositoryVariables(repo);
+            Map<String, Object> lastSourceOffset = null;
+            lastSourceOffset = context.offsetStorageReader().offset(sourcePartition(RepoVar));
+            if (lastSourceOffset == null) {
+                // we haven't fetched anything yet, so we initialize to given configuration timestamp
+                RepoVar.nextQuerySince = config.getSince();
+                RepoVar.nextPageToVisit=1;
+                RepoVar.lastIssueNumber = -1;
+            } else {
+                Object updatedAt = lastSourceOffset.get(UPDATED_AT_FIELD);
+                Object issueNumber = lastSourceOffset.get(NUMBER_FIELD);
+                Object nextPage = lastSourceOffset.get(NEXT_PAGE_FIELD);
+                if (updatedAt != null && (updatedAt instanceof String)) {
+                    RepoVar.nextQuerySince = Instant.parse((String) updatedAt);
+                }
+                if (issueNumber != null && (issueNumber instanceof String)) {
+                    RepoVar.lastIssueNumber = Integer.valueOf((String) issueNumber);
+                }
+                if (nextPage != null && (nextPage instanceof String)) {
+                    RepoVar.nextPageToVisit = Integer.valueOf((String) nextPage);
+                }
             }
-            if(issueNumber != null && (issueNumber instanceof String)){
-                lastIssueNumber = Integer.valueOf((String) issueNumber);
-            }
-            if (nextPage != null && (nextPage instanceof String)){
-                nextPageToVisit = Integer.valueOf((String) nextPage);
-            }
+            repositoryList.add(RepoVar);
         }
     }
 
@@ -70,39 +80,42 @@ public class GitHubSourceTask extends SourceTask {
     public List<SourceRecord> poll() throws InterruptedException {
         gitHubHttpAPIClient.sleepIfNeed();
 
+        RepositoryVariables repoVar=repositoryList.get(RoundRobinNumber);
+
         // fetch data
         final ArrayList<SourceRecord> records = new ArrayList<>();
-        JSONArray issues = gitHubHttpAPIClient.getNextIssues(nextPageToVisit, nextQuerySince);
+        JSONArray issues = gitHubHttpAPIClient.getNextIssues(repoVar);
         // we'll count how many results we get with i
         int i = 0;
         for (Object obj : issues) {
             Issue issue = Issue.fromJson((JSONObject) obj);
-            SourceRecord sourceRecord = generateSourceRecord(issue);
+            SourceRecord sourceRecord = generateSourceRecord(issue,repoVar);
             records.add(sourceRecord);
             i += 1;
-            lastUpdatedAt = issue.getUpdatedAt();
+            repoVar.lastUpdatedAt = issue.getUpdatedAt();
         }
         if (i > 0) log.info(String.format("Fetched %s record(s)", i));
-        if (i == 100){
+        if (i == config.getBatchSize()){
             // we have reached a full batch, we need to get the next one
-            nextPageToVisit += 1;
+            repoVar.nextPageToVisit += 1;
         }
         else {
-            nextQuerySince = lastUpdatedAt.plusSeconds(1);
-            nextPageToVisit = 1;
+            repoVar.nextQuerySince = repoVar.lastUpdatedAt.plusSeconds(1);
+            repoVar.nextPageToVisit = 1;
             gitHubHttpAPIClient.sleep();
         }
+        RoundRobinNumber=(RoundRobinNumber+1)%NumOfReposToFollow;
         return records;
     }
 
-    private SourceRecord generateSourceRecord(Issue issue) {
+    private SourceRecord generateSourceRecord(Issue issue,RepositoryVariables repoVar) {
         return new SourceRecord(
-                sourcePartition(),
-                sourceOffset(issue.getUpdatedAt()),
-                config.getTopic(),
+                sourcePartition(repoVar),
+                sourceOffset(repoVar),
+                repoVar.getTopic(),
                 null, // partition will be inferred by the framework
                 KEY_SCHEMA,
-                buildRecordKey(issue),
+                buildRecordKey(issue,repoVar),
                 VALUE_SCHEMA,
                 buildRecordValue(issue),
                 issue.getUpdatedAt().toEpochMilli());
@@ -111,27 +124,34 @@ public class GitHubSourceTask extends SourceTask {
     @Override
     public void stop() {
         // Do whatever is required to stop your task.
+        try {
+            log.info("Closing gitHubHttpAPIClient");
+            gitHubHttpAPIClient.close();
+        } catch (IOException e) {
+            log.error("Exception in closing gitHubHttpAPIClient");
+            e.printStackTrace();
+        }
     }
 
-    private Map<String, String> sourcePartition() {
+    private Map<String, String> sourcePartition(RepositoryVariables RepoVar) {
         Map<String, String> map = new HashMap<>();
-        map.put(OWNER_FIELD, config.getOwnerConfig());
-        map.put(REPOSITORY_FIELD, config.getRepoConfig());
+        map.put(OWNER_FIELD, RepoVar.getOwner());
+        map.put(REPOSITORY_FIELD, RepoVar.getRepoName());
         return map;
     }
 
-    private Map<String, String> sourceOffset(Instant updatedAt) {
+    private Map<String, String> sourceOffset(RepositoryVariables repoVar) {
         Map<String, String> map = new HashMap<>();
-        map.put(UPDATED_AT_FIELD, DateUtils.MaxInstant(updatedAt, nextQuerySince).toString());
-        map.put(NEXT_PAGE_FIELD, nextPageToVisit.toString());
+        map.put(UPDATED_AT_FIELD,repoVar.nextQuerySince.toString());
+        map.put(NEXT_PAGE_FIELD, repoVar.nextPageToVisit.toString());
         return map;
     }
 
-    private Struct buildRecordKey(Issue issue){
+    private Struct buildRecordKey(Issue issue,RepositoryVariables repoVar){
         // Key Schema
         Struct key = new Struct(KEY_SCHEMA)
-                .put(OWNER_FIELD, config.getOwnerConfig())
-                .put(REPOSITORY_FIELD, config.getRepoConfig())
+                .put(OWNER_FIELD, repoVar.getOwner())
+                .put(REPOSITORY_FIELD, repoVar.getRepoName())
                 .put(NUMBER_FIELD, issue.getNumber());
 
         return key;
