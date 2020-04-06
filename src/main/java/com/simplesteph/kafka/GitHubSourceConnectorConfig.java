@@ -34,6 +34,9 @@ public class GitHubSourceConnectorConfig extends AbstractConfig {
     private static final String AUTH_PASSWORD_DOC = "Optional Password to authenticate calls";
 
 
+    public static final String AUTH_ACCESSTOKEN_CONFIG = "auth.accesstoken";
+    private static final String AUTH_ACCESSTOKEN_DOC = "Optional accesstoken to authenticate calls";
+
     public GitHubSourceConnectorConfig(ConfigDef config, Map<String, String> parsedConfig) {
         super(config, parsedConfig);
     }
@@ -49,7 +52,8 @@ public class GitHubSourceConnectorConfig extends AbstractConfig {
                 .define(SINCE_CONFIG, Type.STRING, ZonedDateTime.now().minusYears(1).toInstant().toString(),
                         new TimestampValidator(), Importance.HIGH, SINCE_DOC)
                 .define(AUTH_USERNAME_CONFIG, Type.STRING, "", Importance.HIGH, AUTH_USERNAME_DOC)
-                .define(AUTH_PASSWORD_CONFIG, Type.PASSWORD, "", Importance.HIGH, AUTH_PASSWORD_DOC);
+                .define(AUTH_PASSWORD_CONFIG, Type.PASSWORD, "", Importance.HIGH, AUTH_PASSWORD_DOC)
+                .define(AUTH_ACCESSTOKEN_CONFIG, Type.PASSWORD, "", Importance.HIGH, AUTH_ACCESSTOKEN_DOC);
     }
 
     public String[] getReposConfig(){return this.getString(REPOS_CONFIG).split(",");}
@@ -69,4 +73,6 @@ public class GitHubSourceConnectorConfig extends AbstractConfig {
     public String getAuthPassword(){
         return this.getPassword(AUTH_PASSWORD_CONFIG).value();
     }
+
+    public String getAuthAccesstoken(){return this.getPassword(AUTH_ACCESSTOKEN_CONFIG).value();}
 }

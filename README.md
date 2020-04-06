@@ -10,20 +10,26 @@ The connector writes to topic that is great candidate to demonstrate *log compac
 
 ```
 name=GitHubSourceConnectorDemo
-tasks.max=1
+tasks.max=2
 connector.class=com.simplesteph.kafka.GitHubSourceConnector
-github.repos=kubernetes/kubernetes:github-issues-kubernetes,apache/kafka:github-issues-kafka
 since.timestamp=2017-01-01T00:00:00Z
-# I heavily recommend you set those two fields:
-auth.username=your_username
-auth.password=your_password
+#Pattern to be followed for mentioning repositories owner/repo:topic
+github.repos=kubernetes/kubernetes:github-issues-kubernetes,apache/kafka:github-issues-kafka
+# I heavily recommend you set auth.accesstoken field:
+#auth.username=
+#auth.password=
+auth.accesstoken=your_accestoken
 ```
-Note: Configuration for github.repos should be set and should follow the pattern owner1/repo1:topic1,owner2/repo2:topic2 ....
+Note: Configuration for **github.repos** should be set and should follow the pattern owner1/repo1:topic1,owner2/repo2:topic2 ....
 
-You can control the number of tasks to run by using *tasks.max*. This allows work to be divided among tasks i.e., each task will be assigned few repositories and 
+You can control the number of tasks to run by using **tasks.max**. This allows work to be divided among tasks i.e., each task will be assigned few repositories and 
 will fetch issues for those repositories. 
 
-Set *since.timestamp* to fetch the issues of repositories which have been updated after the required timestamp.
+Set **since.timestamp** to fetch the issues of repositories which have been updated after the required timestamp.
+
+Use either **auth.username** and **auth.password** or only **auth.accesstoken**. Using **auth.accesstoken** is preferable 
+because authentication with *username* and *password* has been deprecated and will soon be not supported by Github APIs.
+For generating the *personal accesstoken* follow the steps in [https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) 
 
 # Running in development
 

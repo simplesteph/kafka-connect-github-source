@@ -1,6 +1,7 @@
 package com.simplesteph.kafka;
 
 import com.simplesteph.kafka.utils.SetBasicAuthUtil;
+import com.simplesteph.kafka.utils.SetBearerAuthUtil;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -101,7 +102,11 @@ public class GitHubAPIHttpClient implements Closeable {
 
     protected HttpResponse getNextIssuesAPI(RepositoryVariables repoVar) throws IOException {
         HttpGet httpGet=new HttpGet(constructUrl(repoVar));
-        if (!config.getAuthUsername().isEmpty() && !config.getAuthPassword().isEmpty() ){
+        if(!config.getAuthAccesstoken().isEmpty()){
+            SetBearerAuthUtil.SetBearerAuthUtil(httpGet,config.getAuthAccesstoken());
+        }
+
+        else if (!config.getAuthUsername().isEmpty() && !config.getAuthPassword().isEmpty() ){
             SetBasicAuthUtil.SetBasicAuth(httpGet,config.getAuthUsername(), config.getAuthPassword());
         }
         HttpResponse response= httpClient.execute(httpGet);
