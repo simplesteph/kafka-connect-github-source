@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.simplesteph.kafka.GitHubAPIHttpClient.*;
 import static com.simplesteph.kafka.GitHubSourceConnectorConfig.*;
 import static org.junit.Assert.*;
 
@@ -43,10 +44,9 @@ public class GitHubSourceTaskTest {
         if (httpResponse.getStatus() != 403) {
             assertEquals(200, httpResponse.getStatus());
             Set<String> headers = httpResponse.getHeaders().keySet();
-            assertTrue(headers.contains("ETag"));
-            assertTrue(headers.contains("X-RateLimit-Limit"));
-            assertTrue(headers.contains("X-RateLimit-Remaining"));
-            assertTrue(headers.contains("X-RateLimit-Reset"));
+            assertTrue(headers.contains(X_RATELIMIT_LIMIT_HEADER));
+            assertTrue(headers.contains(X_RATELIMIT_REMAINING_HEADER));
+            assertTrue(headers.contains(X_RATELIMIT_RESET_HEADER));
             assertEquals(batchSize.intValue(), httpResponse.getBody().getArray().length());
             JSONObject jsonObject = (JSONObject) httpResponse.getBody().getArray().get(0);
             Issue issue = Issue.fromJson(jsonObject);

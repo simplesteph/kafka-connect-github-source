@@ -27,6 +27,10 @@ public class GitHubAPIHttpClient {
 
     GitHubSourceConnectorConfig config;
 
+    public static final String X_RATELIMIT_LIMIT_HEADER="X-Ratelimit-Limit";
+    public static final String X_RATELIMIT_REMAINING_HEADER="X-Ratelimit-Remaining";
+    public static final String X_RATELIMIT_RESET_HEADER="X-Ratelimit-Reset";
+
     public GitHubAPIHttpClient(GitHubSourceConnectorConfig config){
         this.config = config;
     }
@@ -39,9 +43,9 @@ public class GitHubAPIHttpClient {
 
             // deal with headers in any case
             Headers headers = jsonResponse.getHeaders();
-            XRateLimit = Integer.valueOf(headers.getFirst("X-RateLimit-Limit"));
-            XRateRemaining = Integer.valueOf(headers.getFirst("X-RateLimit-Remaining"));
-            XRateReset = Integer.valueOf(headers.getFirst("X-RateLimit-Reset"));
+            XRateLimit = Integer.valueOf(headers.getFirst(X_RATELIMIT_LIMIT_HEADER));
+            XRateRemaining = Integer.valueOf(headers.getFirst(X_RATELIMIT_REMAINING_HEADER));
+            XRateReset = Integer.valueOf(headers.getFirst(X_RATELIMIT_RESET_HEADER));
             switch (jsonResponse.getStatus()){
                 case 200:
                     return jsonResponse.getBody().getArray();
