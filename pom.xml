@@ -11,7 +11,7 @@
 
     <properties>
         <kafka.version>3.3.2</kafka.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
     </properties>
 
     <dependencies>
