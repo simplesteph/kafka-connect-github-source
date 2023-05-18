@@ -1,5 +1,7 @@
 package com.simplesteph.kafka;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.simplesteph.kafka.model.Issue;
 import com.simplesteph.kafka.model.PullRequest;
 import com.simplesteph.kafka.model.User;
@@ -41,17 +43,21 @@ public class GitHubSourceTask extends SourceTask {
         gitHubHttpAPIClient = new GitHubAPIHttpClient(config);
     }
 
+    Map<String, Object> lastSourceOffset;
+
     private void initializeLastVariables(){
-        Map<String, Object> lastSourceOffset = null;
-        lastSourceOffset = context.offsetStorageReader().offset(sourcePartition());
-        if( lastSourceOffset == null){
+        String jsonOffsetData = new Gson().toJson(lastSourceOffset);
+        // TypeToken preserves the generic type information of the Map when deserializing the JSON string.
+        TypeToken<Map<String, Object>> typeToken = new TypeToken<Map<String, Object>>() {};
+        Map<String, Object> offsetData = new Gson().fromJson(jsonOffsetData, typeToken.getType());
+        if( offsetData == null){
             // we haven't fetched anything yet, so we initialize to 7 days ago
             nextQuerySince = config.getSince();
             lastIssueNumber = -1;
         } else {
-            Object updatedAt = lastSourceOffset.get(UPDATED_AT_FIELD);
-            Object issueNumber = lastSourceOffset.get(NUMBER_FIELD);
-            Object nextPage = lastSourceOffset.get(NEXT_PAGE_FIELD);
+            Object updatedAt = offsetData.get(UPDATED_AT_FIELD);
+            Object issueNumber = offsetData.get(NUMBER_FIELD);
+            Object nextPage = offsetData.get(NEXT_PAGE_FIELD);
             if(updatedAt != null && (updatedAt instanceof String)){
                 nextQuerySince = Instant.parse((String) updatedAt);
             }
@@ -63,8 +69,6 @@ public class GitHubSourceTask extends SourceTask {
             }
         }
     }
-
-
 
     @Override
     public List<SourceRecord> poll() throws InterruptedException {

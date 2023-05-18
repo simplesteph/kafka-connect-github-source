@@ -27,9 +27,9 @@ public class GitHubAPIHttpClient {
 
     GitHubSourceConnectorConfig config;
 
-    public static final String X_RATELIMIT_LIMIT_HEADER="X-Ratelimit-Limit";
-    public static final String X_RATELIMIT_REMAINING_HEADER="X-Ratelimit-Remaining";
-    public static final String X_RATELIMIT_RESET_HEADER="X-Ratelimit-Reset";
+    public static final String X_RATELIMIT_LIMIT_HEADER="X-RateLimit-Limit";
+    public static final String X_RATELIMIT_REMAINING_HEADER="X-RateLimit-Remaining";
+    public static final String X_RATELIMIT_RESET_HEADER="X-RateLimit-Reset";
 
     public GitHubAPIHttpClient(GitHubSourceConnectorConfig config){
         this.config = config;
